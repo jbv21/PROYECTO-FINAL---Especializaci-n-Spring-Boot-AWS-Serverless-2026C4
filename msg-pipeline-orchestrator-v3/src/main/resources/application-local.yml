@@ -1,0 +1,9 @@
+# =============================================================================
+# application-local.yml -- Perfil 'local' (pruebas sin AWS)
+# =============================================================================
+app:
+  aws:
+    region: us-east-1
+    dynamodb-table: msg-pipeline-orders-v3-local
+    event-bus-name: msg-pipeline-bus-v3-local
+    validator-function-name: msg-pipeline-validator-v3-local

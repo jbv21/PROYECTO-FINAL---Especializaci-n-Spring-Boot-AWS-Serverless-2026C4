@@ -1,0 +1,15 @@
+# =============================================================================
+# application.yml -- Configuracion comun (Validator v3)
+# =============================================================================
+spring:
+  main:
+    banner-mode: off
+    web-application-type: servlet
+  application:
+    name: msg-pipeline-validator-v3
+
+logging:
+  level:
+    root: INFO
+    com.msgpipeline: INFO
+    software.amazon.awssdk: WARN

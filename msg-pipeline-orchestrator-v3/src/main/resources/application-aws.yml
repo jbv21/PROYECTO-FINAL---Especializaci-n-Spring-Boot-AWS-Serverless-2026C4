@@ -1,0 +1,11 @@
+# =============================================================================
+# application-aws.yml -- Perfil 'aws' (Lambda en produccion)
+# =============================================================================
+# Los valores se inyectan desde las VARIABLES DE ENTORNO del Lambda.
+# Region fija: us-east-1
+app:
+  aws:
+    region: ${AWS_REGION_NAME:us-east-1}
+    dynamodb-table: ${DYNAMODB_TABLE_NAME:msg-pipeline-orders-v3}
+    event-bus-name: ${EVENT_BUS_NAME:msg-pipeline-bus-v3}
+    validator-function-name: ${VALIDATOR_FUNCTION_NAME:msg-pipeline-validator-v3}

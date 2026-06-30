@@ -1,0 +1,86 @@
+// =============================================================================
+// build.gradle -- msg-pipeline-orchestrator-v3
+// =============================================================================
+// ARQUITECTURA: Hexagonal (Ports & Adapters) + Clean Architecture
+//
+// ROL EN v3:
+//   Lambda de entrada del pipeline. Recibe POST /orders-v3 desde API Gateway
+//   (sin autenticacion), invoca SINCRONAMENTE al Lambda Validator v3,
+//   persiste en DynamoDB y publica el evento OrderProcessed en EventBridge.
+//
+// HANDLER LAMBDA:
+//   com.msgpipeline.orchestrator.OrchestratorHandler::handleRequest
+//
+// EMPAQUETADO PARA LAMBDA (task lambdaJar):
+//   ./gradlew clean lambdaJar
+//   -> build/distributions/msg-pipeline-orchestrator-v3-lambda.zip
+//      (clases en la raiz + dependencias en lib/)
+// =============================================================================
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.0'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group   = 'com.msgpipeline'
+version = '3.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+configurations {
+    compileOnly { extendsFrom annotationProcessor }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // -- Spring Boot Core --
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // -- AWS Lambda runtime --
+    implementation 'com.amazonaws:aws-lambda-java-core:1.2.3'
+    implementation 'com.amazonaws:aws-lambda-java-events:3.11.4'
+
+    // -- AWS SDK v2 (DynamoDB, EventBridge, Lambda) --
+    implementation platform('software.amazon.awssdk:bom:2.25.40')
+    implementation 'software.amazon.awssdk:dynamodb'
+    implementation 'software.amazon.awssdk:eventbridge'
+    implementation 'software.amazon.awssdk:lambda'   // invocacion sincrona al Validator
+
+    // -- Utilidades --
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly         'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // -- Tests --
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+// bootJar genera BOOT-INF/classes (Lambda no lo carga); usamos jar plano.
+bootJar { enabled = false }
+jar     { enabled = true  }
+
+// -- lambdaJar: ZIP de despliegue (clases en raiz + deps en lib/) -------------
+tasks.register('lambdaJar', Zip) {
+    group       = 'build'
+    description  = 'Genera el ZIP de despliegue para AWS Lambda (clases en raiz + deps en lib/)'
+
+    archiveFileName      = 'msg-pipeline-orchestrator-v3-lambda.zip'
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+
+    dependsOn compileJava, processResources
+
+    from sourceSets.main.output
+    into('lib') { from configurations.runtimeClasspath }
+}
+
+build.dependsOn lambdaJar
+
+test { useJUnitPlatform() }

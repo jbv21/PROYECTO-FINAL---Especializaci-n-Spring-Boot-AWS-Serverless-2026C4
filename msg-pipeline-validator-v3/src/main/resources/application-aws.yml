@@ -1,0 +1,7 @@
+# =============================================================================
+# application-aws.yml -- Perfil 'aws' (Lambda en produccion)
+# =============================================================================
+# El Validator no consume servicios AWS de salida; solo aplica reglas.
+app:
+  aws:
+    region: ${AWS_REGION_NAME:us-east-1}
